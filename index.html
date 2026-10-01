@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>StudyFlow — Smart Study Planner</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <span class="logo-icon">📚</span>
+      <span class="logo-text">StudyFlow</span>
+    </div>
+    <button class="sidebar-toggle" id="sidebarToggle" title="Close sidebar">✕</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-view="dashboard">
+      <span class="nav-icon">🏠</span> Dashboard
+    </button>
+    <button class="nav-item" data-view="subjects">
+      <span class="nav-icon">📖</span> Subjects
+    </button>
+    <button class="nav-item" data-view="planner">
+      <span class="nav-icon">📅</span> Planner
+    </button>
+    <button class="nav-item" data-view="progress">
+      <span class="nav-icon">📊</span> Progress
+    </button>
+  </nav>
+
+  <div class="sidebar-subjects" id="sidebarSubjects">
+    <p class="sidebar-label">Your Subjects</p>
+    <div id="subjectList"></div>
+    <button class="btn-add-subject" id="openAddSubject">+ Add Subject</button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="study-streak">
+      <span class="streak-fire">🔥</span>
+      <div>
+        <p class="streak-count" id="streakCount">0 day streak</p>
+        <p class="streak-label">Keep it up!</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="hamburger" id="hamburger">☰</button>
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-actions">
+      <div class="global-timer-badge" id="globalTimerBadge" style="display:none">
+        <span class="timer-dot"></span>
+        <span id="globalTimerLabel">Studying</span>
+        <span id="globalTimerDisplay">00:00</span>
+      </div>
+      <button class="btn-icon" id="themeToggle" title="Toggle dark mode">🌙</button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- DASHBOARD VIEW -->
+    <section class="view active" id="view-dashboard">
+      <div class="dashboard-welcome">
+        <h1 class="welcome-heading">Good <span id="timeGreeting">morning</span>! 👋</h1>
+        <p class="welcome-sub">Here's your study overview for today.</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <p class="stat-value" id="statSubjects">0</p>
+          <p class="stat-label">Subjects</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-value" id="statTopics">0</p>
+          <p class="stat-label">Topics</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-value" id="statDone">0%</p>
+          <p class="stat-label">Complete</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-value" id="statTime">0h</p>
+          <p class="stat-label">Studied</p>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card" id="todayCard">
+          <h2 class="card-title">Today's Plan</h2>
+          <div id="todayTopics" class="today-list">
+            <p class="empty-msg">No topics scheduled yet.<br>Go to <b>Planner</b> to add some.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Active Timer</h2>
+          <div class="active-timer-panel" id="activeTimerPanel">
+            <p class="timer-subject-name" id="activeSubjectName">—</p>
+            <p class="timer-topic-name" id="activeTopicName">No session running</p>
+            <div class="big-timer" id="bigTimer">00:00:00</div>
+            <div class="timer-controls">
+              <button class="btn-timer start" id="timerStartBtn" onclick="startGlobalTimer()">▶ Start</button>
+              <button class="btn-timer pause" id="timerPauseBtn" onclick="pauseGlobalTimer()" style="display:none">⏸ Pause</button>
+              <button class="btn-timer stop" id="timerStopBtn" onclick="stopGlobalTimer()" style="display:none">⏹ Stop</button>
+            </div>
+            <p class="timer-hint">Select a topic first, then start the timer.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1.5rem">
+        <h2 class="card-title">Subject Overview</h2>
+        <div id="dashSubjectCards" class="subject-overview-grid">
+          <p class="empty-msg">Add subjects from the sidebar to get started.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUBJECTS VIEW -->
+    <section class="view" id="view-subjects">
+      <div class="view-header">
+        <h1 class="view-title">Subjects &amp; Topics</h1>
+        <button class="btn-primary" id="openAddSubject2">+ New Subject</button>
+      </div>
+      <div id="subjectsContainer" class="subjects-grid"></div>
+      <div class="empty-state" id="subjectsEmpty">
+        <div class="empty-illustration">📖</div>
+        <h3>No subjects yet</h3>
+        <p>Add your first subject to start organising your study plan.</p>
+        <button class="btn-primary" onclick="openAddSubjectModal()">+ Add Subject</button>
+      </div>
+    </section>
+
+    <!-- PLANNER VIEW -->
+    <section class="view" id="view-planner">
+      <div class="view-header">
+        <h1 class="view-title">Study Planner</h1>
+        <div class="planner-date-nav">
+          <button class="btn-icon" onclick="changeDay(-1)">◀</button>
+          <span id="plannerDate" class="current-date"></span>
+          <button class="btn-icon" onclick="changeDay(1)">▶</button>
+        </div>
+      </div>
+      <div class="planner-layout">
+        <div class="planner-left">
+          <div class="card">
+            <h3 class="card-title">Add to Today</h3>
+            <div class="form-group">
+              <label class="form-label">Subject</label>
+              <select id="plannerSubjectSelect" class="form-select">
+                <option value="">— choose subject —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Topic</label>
+              <select id="plannerTopicSelect" class="form-select">
+                <option value="">— choose topic —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Goal (minutes)</label>
+              <input type="number" id="plannerGoalMin" class="form-input" placeholder="e.g. 30" min="5" max="240" />
+            </div>
+            <button class="btn-primary" style="width:100%" onclick="addPlannerEntry()">Add to Plan</button>
+          </div>
+        </div>
+        <div class="planner-right">
+          <div class="card">
+            <h3 class="card-title">Schedule</h3>
+            <div id="plannerEntries" class="planner-entries">
+              <p class="empty-msg">Nothing scheduled for this day.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROGRESS VIEW -->
+    <section class="view" id="view-progress">
+      <div class="view-header">
+        <h1 class="view-title">Progress</h1>
+      </div>
+      <div id="progressContainer" class="progress-grid"></div>
+      <div class="empty-state" id="progressEmpty" style="display:none">
+        <div class="empty-illustration">📊</div>
+        <h3>Nothing to track yet</h3>
+        <p>Complete some topics to see your progress here.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ADD SUBJECT MODAL -->
+<div class="modal-overlay" id="addSubjectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add Subject</h2>
+      <button class="btn-icon" onclick="closeModal('addSubjectModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subject Name</label>
+      <input type="text" id="subjectNameInput" class="form-input" placeholder="e.g. Mathematics" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <div class="color-picker" id="colorPicker">
+        <button class="color-dot active" data-color="#6366f1" style="background:#6366f1"></button>
+        <button class="color-dot" data-color="#0ea5e9" style="background:#0ea5e9"></button>
+        <button class="color-dot" data-color="#10b981" style="background:#10b981"></button>
+        <button class="color-dot" data-color="#f59e0b" style="background:#f59e0b"></button>
+        <button class="color-dot" data-color="#ef4444" style="background:#ef4444"></button>
+        <button class="color-dot" data-color="#ec4899" style="background:#ec4899"></button>
+        <button class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6"></button>
+        <button class="color-dot" data-color="#14b8a6" style="background:#14b8a6"></button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Icon (emoji)</label>
+      <input type="text" id="subjectIconInput" class="form-input" placeholder="📐" maxlength="2" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('addSubjectModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveSubject()">Save Subject</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TOPIC MODAL -->
+<div class="modal-overlay" id="addTopicModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add Topic</h2>
+      <button class="btn-icon" onclick="closeModal('addTopicModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Topic Name</label>
+      <input type="text" id="topicNameInput" class="form-input" placeholder="e.g. Quadratic Equations" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description (optional)</label>
+      <textarea id="topicDescInput" class="form-input" rows="2" placeholder="What will you cover?"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Priority</label>
+      <select id="topicPriorityInput" class="form-select">
+        <option value="high">🔴 High</option>
+        <option value="medium" selected>🟡 Medium</option>
+        <option value="low">🟢 Low</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('addTopicModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveTopic()">Add Topic</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT SUBJECT MODAL -->
+<div class="modal-overlay" id="editSubjectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Edit Subject</h2>
+      <button class="btn-icon" onclick="closeModal('editSubjectModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subject Name</label>
+      <input type="text" id="editSubjectName" class="form-input" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <div class="color-picker" id="editColorPicker">
+        <button class="color-dot" data-color="#6366f1" style="background:#6366f1"></button>
+        <button class="color-dot" data-color="#0ea5e9" style="background:#0ea5e9"></button>
+        <button class="color-dot" data-color="#10b981" style="background:#10b981"></button>
+        <button class="color-dot" data-color="#f59e0b" style="background:#f59e0b"></button>
+        <button class="color-dot" data-color="#ef4444" style="background:#ef4444"></button>
+        <button class="color-dot" data-color="#ec4899" style="background:#ec4899"></button>
+        <button class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6"></button>
+        <button class="color-dot" data-color="#14b8a6" style="background:#14b8a6"></button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Icon (emoji)</label>
+      <input type="text" id="editSubjectIcon" class="form-input" maxlength="2" />
+    </div>
+    <input type="hidden" id="editSubjectId" />
+    <div class="modal-actions">
+      <button class="btn-danger" onclick="deleteSubject()">Delete</button>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn-secondary" onclick="closeModal('editSubjectModal')">Cancel</button>
+        <button class="btn-primary" onclick="updateSubject()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
